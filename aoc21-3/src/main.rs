@@ -16,12 +16,16 @@ impl BitCounter {
     }
     
     fn least_common(&self) -> i32 {
-        if self.one > self.zero{
-            0
-        }
-        else {
+        if self.one < self.zero{
             1
         }
+        else {
+            0
+        }
+    }
+
+    fn same(&self) -> bool {
+        self.most_common() == self.least_common()
     }
 }
 
@@ -45,7 +49,6 @@ fn main() {
         BitCounter { one: 0, zero: 0 },
     ];
     
-    let mut l = 1;
     for line in &lines {
         let mut i = 0;
         for c in line.chars() {
@@ -55,8 +58,7 @@ fn main() {
                 _ => continue,
             }            
             i+=1;
-        }        
-        l+=1;
+        }    
     }
     
     let mut gamma = 0;
@@ -75,20 +77,47 @@ fn main() {
     print!("mul: {}\r\n", gamma*epsilon);
 
 
-    let x = format!("{:b}", gamma);
-    print!("{:?}", x);
-    //let ogr = find_ogr(&lines, 0, gamma);
-    //let cosr = find_cosr(&lines, 0, epsilon);
+    let ogr = find_ogr(&lines, 0);    
+    let cosr = find_cosr(&lines, 0);
+    println!("ogr: {}",ogr);
+    println!("cosr: {}",cosr);
 
-    //let bin_idx = "01110011001";
-    //let intval = isize::from_str_radix(bin_idx, 2).unwrap();
-    //print!("ogr: {}\r\n", ogr);
-    //print!("cosr: {}\r\n", cosr);
-    //print!("mul: {}\r\n", ogr*cosr);
+    let ogr = bin_str_to_i32(&ogr);
+    let cosr = bin_str_to_i32(&cosr);
+    println!("ogr: {}",ogr);
+    println!("cosr: {}",cosr);
+    println!("mul: {}", ogr*cosr);
 }
 
-fn matches_mc(line:&str, i:&usize) -> bool {
-    false
+fn bin_str_to_i32(input: &str) -> i32 {
+    let base: i32 = 2;
+    let mut accumulator = 0;
+    let mut i = 0;
+    for c in input.chars() {
+        let exp = 11-i;
+        let positional_value = base.pow(exp);
+        let d = if c == '1' {1} else {0};
+        accumulator += positional_value * d;
+        i+=1;
+    }
+
+    accumulator
+}
+
+fn matches_mc(line:&str, bc:&BitCounter, i:&usize) -> bool {
+    match line.chars().nth(i.to_owned()).unwrap() {
+        '1' => bc.most_common() == 1 || bc.same(),
+        '0' => bc.most_common() == 0 && !bc.same(),
+        _ => false,
+    }
+}
+
+fn matches_lc(line:&str, bc:&BitCounter, i:&usize) -> bool {
+    match line.chars().nth(i.to_owned()).unwrap() {
+        '1' => bc.least_common() == 1 && !bc.same(),
+        '0' => bc.least_common() == 0 || bc.same(),
+        _ => false,
+    }
 }
 
 fn find_ogr(lines:&Vec<&str>, iteration:usize) -> String {
@@ -96,24 +125,43 @@ fn find_ogr(lines:&Vec<&str>, iteration:usize) -> String {
     if lines.len() == 1 {
         return String::from(lines[0]);
     }
-    
-    if lines.len() == 2 {
-        if lines[0].ends_with("1") {
-            return String::from(lines[0]);
-        }
-        else {
-            return String::from(lines[1]);
-        }
+
+    let mut bc = BitCounter { one: 0, zero: 0 };
+    for line in lines {
+        match line.chars().nth(iteration).unwrap() {
+            '0' => bc.zero += 1, 
+            '1' => bc.one += 1,
+            _ => continue,
+        }   
     }
 
     let lines = lines.into_iter()
-        .filter(|l| matches_mc(l,&iteration))
+        .filter(|l| matches_mc(l, &bc,&iteration))
         .cloned()
         .collect::<Vec<&str>>();
 
-    return find_ogr(&lines, iteration+1);
+    find_ogr(&lines, iteration+1)
 }
 
-fn find_cosr<'a>(lines:&'a Vec<&str>, iteration:usize) -> &'a str {
-    return lines[0]
+fn find_cosr(lines:&Vec<&str>, iteration:usize) -> String {
+    
+    if lines.len() == 1 {
+        return String::from(lines[0]);
+    }
+
+    let mut bc = BitCounter { one: 0, zero: 0 };
+    for line in lines {
+        match line.chars().nth(iteration).unwrap() {
+            '0' => bc.zero += 1, 
+            '1' => bc.one += 1,
+            _ => continue,
+        }   
+    }
+
+    let lines = lines.into_iter()
+        .filter(|l| matches_lc(l, &bc,&iteration))
+        .cloned()
+        .collect::<Vec<&str>>();
+
+    find_cosr(&lines, iteration+1)
 }
