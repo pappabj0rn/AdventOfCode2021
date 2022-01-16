@@ -2,7 +2,7 @@ use std::fs;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string("C:\\GitHub\\AdventOfCode2021\\aoc21-6\\src\\input.txt")?;
+    let contents = fs::read_to_string("src/input.txt")?;
     let fish:Vec<i32> = contents
         .split(",")
         .map(|x| x.parse::<i32>().unwrap())
