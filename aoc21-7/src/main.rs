@@ -16,20 +16,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         crabs[c as usize] += 1;
     }
 
+    //println!("{:?}",crabs);
+
     let len = crabs.len();
-    for c in 0..len {        
+    for c in 0..len {
         for i in 0..len {
             if i == c {
                 continue;
             }
-            let x = i as i32 - c as i32;
-            calc_space[i] += (crabs[c]*x).abs();
+            let steps = (i as i64 - c as i64).abs();
+            let steps_sum: i64 = (1..=steps).sum();
+            calc_space[i] += crabs[c] * steps_sum;
+            print!(".");
         }
+        //println!("{:?}",calc_space);
+        print!("{}!",c);
     }
-
-    println!("{:?}",crabs);
+    //för stor: 71093044091
+    //            104822130
     
-    println!("min:{}",calc_space.iter().min().unwrap());
+    
+    println!("\rmin:{}",calc_space.iter().min().unwrap());
 
     Ok(())
 }
